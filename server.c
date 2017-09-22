@@ -10,20 +10,26 @@
 
 int DFLAG;
 int srv_sock;
+int BUF_SIZE = 500;
 
-int create_a_listening_socket(int srv_port, int maxconn){
+int create_a_listening_socket(char *srv_name, char *srv_port){
   int srv_sock = -1;
     int s, sfd;
- 
+    ssize_t nread;
+    char buf[BUF_SIZE];
+    socklen_t peer_addr_len;
+    struct sockaddr_storage peer_addr;
+
+
     struct addrinfo hints;
     struct addrinfo *result, *rp;
     memset(&hints, 0, sizeof(struct addrinfo));
            hints.ai_family = AF_UNSPEC;     
-           hints.ai_socktype = SOCK_DGRAM; 
+           hints.ai_socktype = SOCK_STREAM; 
            hints.ai_flags = 0;
            hints.ai_protocol = 0;          
 
-    s = getaddrinfo("127.0.0.1","5555" , &hints, &result);
+    s = getaddrinfo(srv_name,srv_port, &hints, &result);
     if(s != 0){
         perror("Get add Error");
     }
@@ -39,8 +45,15 @@ int create_a_listening_socket(int srv_port, int maxconn){
             close(sfd);
     }
     
+    if(bind(rp->ai_socktype, rp->ai_addr, rp->ai_addrlen)){
+            perror("binding pb");
+    }
     
-    printf("%d",s);
+    
+    //A deplacer dans la boucle for !!
+        peer_addr_len = sizeof(struct sockaddr_storage);
+        nread = recvfrom(sfd, buf, BUF_SIZE, 0,
+                       (struct sockaddr *) &peer_addr, &peer_addr_len);
   
   
   
@@ -89,8 +102,12 @@ int accept_clt_conn(int srv_sock, struct sockaddr_in *clt_sockaddr){
 int main(void) 
 {
   
-  DFLAG = 1;
-
+    DFLAG = 1;
+    if( ! create_a_listening_socket("127.0.0.1","5555")){
+        perror("pb init socket");
+        
+        
+    }
   /* create a listening socket */
   
   /* initialize the chat room with no client */
