@@ -12,7 +12,7 @@ int DFLAG;
 int srv_sock;
 int BUF_SIZE = 500;
 
-int create_a_listening_socket(char *srv_name, char *srv_port){
+int create_a_listening_socket(char *srv_port){
   int srv_sock = -1;
     int s, sfd;
     ssize_t nread;
@@ -29,7 +29,12 @@ int create_a_listening_socket(char *srv_name, char *srv_port){
            hints.ai_flags = 0;
            hints.ai_protocol = 0;          
 
-    s = getaddrinfo(srv_name,srv_port, &hints, &result);
+    printf("Test");
+    fflush(stdout);
+    s = getaddrinfo(NULL,srv_port, &hints, &result);
+    printf("Test2");
+    fflush(stdout);
+    
     if(s != 0){
         perror("Get add Error");
     }
@@ -40,9 +45,10 @@ int create_a_listening_socket(char *srv_name, char *srv_port){
         if(sfd==-1){
             continue;
         }
-        if (connect(sfd, rp->ai_addr, rp->ai_addrlen) != -1)
+        if (connect(sfd, rp->ai_addr, rp->ai_addrlen) != -1){
             break;                 
             close(sfd);
+        }        
     }
     
     if(bind(rp->ai_socktype, rp->ai_addr, rp->ai_addrlen)){
@@ -50,12 +56,8 @@ int create_a_listening_socket(char *srv_name, char *srv_port){
     }
     
     
-    //A deplacer dans la boucle for !!
-        peer_addr_len = sizeof(struct sockaddr_storage);
-        nread = recvfrom(sfd, buf, BUF_SIZE, 0,
-                       (struct sockaddr *) &peer_addr, &peer_addr_len);
-  
-  
+
+
   
  //   int socket(int AF_INET, int SOCK_STREAM, 8);
 
@@ -103,7 +105,7 @@ int main(void)
 {
   
     DFLAG = 1;
-    if( ! create_a_listening_socket("127.0.0.1","5555")){
+    if( ! create_a_listening_socket("5555")){
         perror("pb init socket");
         
         
