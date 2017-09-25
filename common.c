@@ -8,15 +8,21 @@
 */
 int send_msg(int sock, unsigned char code, unsigned char size, char *body) 
 {
-  // msg_t msg;
+  msg_t msg;
   
-  // msg.code = code;
-  // msg.size = size;
+  msg.code = code;
+  msg.size = size;
 
-  /* Code nécessaire à envoyer le message correspondant au protocle
-     sur la socket
-  */
+    if(send(sock,code,HEADSIZE,1) ==-1){
+		perror("pb head");
+        return -1;
+    };
 
+    if(send(sock,&body,size,1) ==-1){
+ 		perror("pb msg");
+         return -1;
+     };
+   
   return 0;
 }
 
@@ -28,7 +34,15 @@ int send_msg(int sock, unsigned char code, unsigned char size, char *body)
 */
 int recv_msg(int sock, unsigned char *code, unsigned char *size, char **body) 
 {
-  // msg_t msg;
-  
+	msg_t msg;
+	if(recv(sock, &code,HEADSIZE, 0)){	
+		perror("pb recv head");
+	}
+	
+		if(recv(sock, &body,&size, 0)){	
+		perror("pb recv body");
+	}
+	
+        
   return 0;
 }

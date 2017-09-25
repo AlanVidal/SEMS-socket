@@ -13,13 +13,7 @@ int srv_sock;
 int BUF_SIZE = 500;
 
 int create_a_listening_socket(char *srv_port){
-  int srv_sock = -1;
     int s, sfd;
-    ssize_t nread;
-    char buf[BUF_SIZE];
-    socklen_t peer_addr_len;
-    struct sockaddr_storage peer_addr;
-
 
     struct addrinfo hints;
     struct addrinfo *result, *rp;
@@ -29,14 +23,11 @@ int create_a_listening_socket(char *srv_port){
            hints.ai_flags = 0;
            hints.ai_protocol = 0;          
 
-    printf("Test");
-    fflush(stdout);
     s = getaddrinfo(NULL,srv_port, &hints, &result);
-    printf("Test2");
-    fflush(stdout);
-    
+  
     if(s != 0){
         perror("Get add Error");
+        return -1;
     }
     
     for(rp = result ; rp != NULL ; rp = rp->ai_next){
@@ -45,78 +36,48 @@ int create_a_listening_socket(char *srv_port){
         if(sfd==-1){
             continue;
         }
-        if (connect(sfd, rp->ai_addr, rp->ai_addrlen) != -1){
-            break;                 
+        if(bind(rp->ai_socktype, rp->ai_addr, rp->ai_addrlen)==0){
+            break;
             close(sfd);
         }        
     }
-    
-    if(bind(rp->ai_socktype, rp->ai_addr, rp->ai_addrlen)){
-            perror("binding pb");
-    }
-    
-    
-
-
-  
- //   int socket(int AF_INET, int SOCK_STREAM, 8);
-
-  
-
-  /* Code nécessaires à la création d'une socket en
-     écoute : 
-
-     - appel à socket() 
-
-     - appel à bind()
-
-     - appel à listen()
-
-     avec les bons paramètres et contrôles d'erreurs.
-
-     La fonction retourne l'identifiant de la socket serveur ou -1 en
-     cas d'erreur.
-  */
-
-  return srv_sock;
+  return sfd;
 }
 
-int accept_clt_conn(int srv_sock, struct sockaddr_in *clt_sockaddr){
+
+int accept_clt_conn(int srv_sock, struct sockaddr_in clt_sockaddr){
   int clt_sock =-1;
 
-  /* Code nécessaire à l'acception d'une connexion sur
-     la socket en écoute (passée en argument via le paramètre srv_sock :
-     
-     - appel à accept()
-     
-     avec les bons paramètres et contrôles d'erreurs.
-     
-     La fonction retourne l'identifiant de la socket cliente ou -1 en
-     cas d'erreur.
-     
-  */
-
-  DEBUG("connexion accepted");
-
-  return clt_sock;
+    if(!(clt_sock =  accept(srv_sock,NULL,NULL))){
+        return -1;
+    };
+//     if(send_msg(clt_sock,1,256,"Hello")){ //
+//         perror("Erreur accpt send"); 
+//     }
+//     
+    return clt_sock;
 }
 
-int main(void) 
-{
-  
-    DFLAG = 1;
-    if( ! create_a_listening_socket("5555")){
-        perror("pb init socket");
-        
-        
+
+int main(void){
+  int sfd;
+  struct sockaddr_in clt_sockaddr;  
+
+  DFLAG = 1;
+    if( ! (sfd = create_a_listening_socket("5555"))){
+        perror("pb init socket");       
     }
-  /* create a listening socket */
-  
-  /* initialize the chat room with no client */
     
   while (1){
-    
-    /* wait for new incoming connection */
+    int clt_sock = -1;
+    if(! (clt_sock = accept_clt_conn(sfd,clt_sockaddr))){
+            perror("Erreur acpt");
+    }
+
+    if( ! send(clt_sock, "test", 21, 256)){ ////
+        perror("msg");
+    }
+        
     
     /* register new buddies in the chat room */
     

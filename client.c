@@ -1,5 +1,7 @@
 #include "common.h"
 #include <signal.h>
+#include <pthread.h>
+
 
 char *srv_name = "localhost";
 int clt_sock;
@@ -12,25 +14,44 @@ int DFLAG;
  *
  * renvoie: descripteur vers le socket
  */ 
-int connect_to_server(char *srv_name, int srv_port){
-  int clt_sock = -1;
+int connect_to_server( int srv_port){
+  //int clt_sock = -1;
+  int s,sfd;
+  
+    printf("Client connect init\n");
 
-  /* Code nécessaires à la création d'une socket en
-     écoute : 
-     
-     - résolution du nom avec gethostbyname
-     
-     - appel à socket() 
-     
-     - appel à connect()
-     
-     avec les bons paramètres et contrôles d'erreurs.
+    struct addrinfo hints;
+    struct addrinfo *result, *rp;
+    memset(&hints, 0, sizeof(struct addrinfo));
+           hints.ai_family = AF_UNSPEC;     
+           hints.ai_socktype = SOCK_STREAM; 
+           hints.ai_flags = 0;
+           hints.ai_protocol = 0;          
+   
+  s = getaddrinfo(NULL,"5555", &hints, &result);
+  
+  if(s != 0){
+    perror("Get add Error");
+    return -1;
+  }
+    
+  for(rp = result ; rp != NULL ; rp = rp->ai_next){
+        sfd= socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+    if(sfd==-1){
+        continue;
+        }
+    if(connect(sfd, rp->ai_addr, rp->ai_addrlen)==0){
+         break;
+         close(sfd);
+        
+        }
 
-     La fonction retourne l'identifiant de la socket cliente ou -1 en cas d'erreur
-  */
+    }
+  printf("Client connect \n");
+    return sfd;
 
-  return clt_sock;
 }
+
 
 int authenticate(int clt_sock){
 
@@ -106,10 +127,17 @@ int instant_messaging(int clt_sock){
 }
 
 int main(int argc, char *argv[]){
-  // char srv_name[BUFFSIZE];
-  int srv_port = 4444;
-
-  DFLAG = 1;
+    int srv_port = 5555;
+    int serveur ;
+    char buff[256];
+    printf("Client main");
+    
+   serveur =  connect_to_server(srv_port);
+    DFLAG = 1;
+    char body[256];
+    recv(serveur, body, sizeof(body, 0));
+//     recv_msg(serveur, 1, sizeof(body),body );
+    printf("%s",buff);
 
   // connect to the server
 
