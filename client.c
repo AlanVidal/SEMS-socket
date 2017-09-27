@@ -138,14 +138,12 @@ int main(int argc, char *argv[]){
     DFLAG = 1;
     char body[256] = "HELLO\0";
 
-    for(int i = 0 ; i< 100; i++){
         
-        if(send(serveur,&body,256,1) <=){
+        if(send_msg(serveur,21,256,"Coucou") <=0){
             perror("pb msg");
             return -1;
-        }else{printf("Msg ok");}
-    }
-
+        }else{printf("Msg ok");
+        }
 
   // connect to the server
 

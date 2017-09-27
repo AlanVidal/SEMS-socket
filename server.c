@@ -71,17 +71,18 @@ int main(void){
         perror("pb init socket");       
     }
     
+
   while (1){
     int clt_sock = -1;
-    int n = 0;
-    char body[256];
-
+     char body[256];
+     
     if(! (clt_sock = accept_clt_conn(sfd,clt_sockaddr))){
             perror("Erreur acpt");
     }
-    if(!(n = recv(clt_sock, body, 256,1))){
+    if(!(recv(clt_sock, body, 256,0))){
         perror("Err msg cli");
     }
+    DEBUG("resul : %s", body);
  
     
     /* register new buddies in the chat room */

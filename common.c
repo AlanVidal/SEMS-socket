@@ -10,19 +10,17 @@ int send_msg(int sock, unsigned char code, unsigned char size, char *body)
 {
   msg_t msg;
   
-  msg.code = code;
-  msg.size = size;
+    msg.code = code;
+    msg.size = size;
 
-    if(send(sock,code,HEADSIZE,1) ==-1){
-		perror("pb head");
+    if(send(sock,&body,msg.size,1) <= 0){
+        perror("pb msg");
         return -1;
-    };
+    }else{printf("Msg ok");}
 
-    if(send(sock,&body,size,1) ==-1){
- 		perror("pb msg");
-         return -1;
-     };
-   
+  
+  
+    
   return 0;
 }
 
