@@ -10,7 +10,7 @@
 
 int DFLAG;
 int srv_sock;
-int BUF_SIZE = 500;
+int BUF_SIZE = 250;
 
 int create_a_listening_socket(char *srv_port){
     int s, sfd;
@@ -20,7 +20,7 @@ int create_a_listening_socket(char *srv_port){
     memset(&hints, 0, sizeof(struct addrinfo));
            hints.ai_family = AF_UNSPEC;     
            hints.ai_socktype = SOCK_STREAM; 
-           hints.ai_flags = 0;
+           hints.ai_flags = AI_PASSIVE | AI_ALL;
            hints.ai_protocol = 0;          
 
     s = getaddrinfo(NULL,srv_port, &hints, &result);
@@ -31,16 +31,23 @@ int create_a_listening_socket(char *srv_port){
     }
     
     for(rp = result ; rp != NULL ; rp = rp->ai_next){
-        sfd= socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+        sfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
         
         if(sfd==-1){
             continue;
         }
-        if(bind(rp->ai_socktype, rp->ai_addr, rp->ai_addrlen)==0){
+        if(bind(sfd, rp->ai_addr, rp->ai_addrlen)==0){
             break;
             close(sfd);
         }        
     }
+    if (rp == NULL) {              
+        fprintf(stderr, "Could not bind\n");
+        exit(EXIT_FAILURE);
+    }
+    
+    freeaddrinfo(result); 
+    listen(sfd,10);
   return sfd;
 }
 
@@ -48,13 +55,9 @@ int create_a_listening_socket(char *srv_port){
 int accept_clt_conn(int srv_sock, struct sockaddr_in clt_sockaddr){
   int clt_sock =-1;
 
-    if(!(clt_sock =  accept(srv_sock,NULL,NULL))){
+    if(!(clt_sock = accept(srv_sock,NULL,NULL))){
         return -1;
-    };
-//     if(send_msg(clt_sock,1,256,"Hello")){ //
-//         perror("Erreur accpt send"); 
-//     }
-//     
+    }
     return clt_sock;
 }
 
@@ -70,14 +73,16 @@ int main(void){
     
   while (1){
     int clt_sock = -1;
+    int n = 0;
+    char body[256];
+
     if(! (clt_sock = accept_clt_conn(sfd,clt_sockaddr))){
             perror("Erreur acpt");
     }
-
-    if( ! send(clt_sock, "test", 21, 256)){ ////
-        perror("msg");
+    if(!(n = recv(clt_sock, body, 256,1))){
+        perror("Err msg cli");
     }
-        
+ 
     
     /* register new buddies in the chat room */
     

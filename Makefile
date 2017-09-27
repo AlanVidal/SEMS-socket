@@ -1,7 +1,7 @@
 .PHONY: clean
 
-CFLAGS=-Wall
-LDFLAGS=-lpthread -std=c99
+CFLAGS=-Wall -std=gnu99 -Wpedantic
+LDFLAGS=-lpthread
 
 all: server client
 

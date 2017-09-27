@@ -23,7 +23,7 @@
 
 #define ADDRLEN sizeof(struct sockaddr_in)
 
-#define SRV_PORT 4444
+#define SRV_PORT 5555
 
 #define eprintf(...) fprintf(stderr, __VA_ARGS__)
 

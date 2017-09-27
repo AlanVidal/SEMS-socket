@@ -25,10 +25,10 @@ int connect_to_server( int srv_port){
     memset(&hints, 0, sizeof(struct addrinfo));
            hints.ai_family = AF_UNSPEC;     
            hints.ai_socktype = SOCK_STREAM; 
-           hints.ai_flags = 0;
+           hints.ai_flags = AI_PASSIVE | AI_ALL;
            hints.ai_protocol = 0;          
    
-  s = getaddrinfo(NULL,"5555", &hints, &result);
+  s = getaddrinfo("localhost","5555", &hints, &result);
   
   if(s != 0){
     perror("Get add Error");
@@ -36,18 +36,21 @@ int connect_to_server( int srv_port){
   }
     
   for(rp = result ; rp != NULL ; rp = rp->ai_next){
-        sfd= socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+        sfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
     if(sfd==-1){
         continue;
         }
     if(connect(sfd, rp->ai_addr, rp->ai_addrlen)==0){
          break;
          close(sfd);
-        
         }
-
+    }        
+    
+    if(rp == NULL){
+        printf("Error client could not bind\n");
+        
     }
-  printf("Client connect \n");
+
     return sfd;
 
 }
@@ -129,15 +132,20 @@ int instant_messaging(int clt_sock){
 int main(int argc, char *argv[]){
     int srv_port = 5555;
     int serveur ;
-    char buff[256];
     printf("Client main");
     
    serveur =  connect_to_server(srv_port);
     DFLAG = 1;
-    char body[256];
-    recv(serveur, body, sizeof(body, 0));
-//     recv_msg(serveur, 1, sizeof(body),body );
-    printf("%s",buff);
+    char body[256] = "HELLO\0";
+
+    for(int i = 0 ; i< 100; i++){
+        
+        if(send(serveur,&body,256,1) <=){
+            perror("pb msg");
+            return -1;
+        }else{printf("Msg ok");}
+    }
+
 
   // connect to the server
 
