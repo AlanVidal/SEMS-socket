@@ -23,7 +23,7 @@
 
 #define ADDRLEN sizeof(struct sockaddr_in)
 
-#define SRV_PORT 5555
+#define SRV_PORT "5555"
 
 #define eprintf(...) fprintf(stderr, __VA_ARGS__)
 
@@ -65,7 +65,7 @@ typedef struct
   unsigned char size;
 } msg_t;
 
-#define HEADSIZE sizeof(char)+sizeof(int)
+#define HEADSIZE sizeof(msg_t)
 
 int send_msg(int sock, unsigned char code, unsigned char size, char *body) ;
 int recv_msg(int sock, unsigned char *code, unsigned char *size, char **body);

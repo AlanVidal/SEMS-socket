@@ -1,7 +1,5 @@
 #include "common.h"
 #include <signal.h>
-#include <pthread.h>
-
 
 char *srv_name = "localhost";
 int clt_sock;
@@ -14,69 +12,86 @@ int DFLAG;
  *
  * renvoie: descripteur vers le socket
  */ 
-int connect_to_server( int srv_port){
-  //int clt_sock = -1;
-  int s,sfd;
+int connect_to_server(char *srv_name, char *srv_port){
+  //struct hostent *host;
+  //struct sockaddr_in sock_addr;
+  struct addrinfo hints;
+  struct addrinfo *result, *rp;
+  int ret_code;
   
-    printf("Client connect init\n");
+    
+  //struct in_addr ip_addr;
+  int clt_sock;
 
-    struct addrinfo hints;
-    struct addrinfo *result, *rp;
-    memset(&hints, 0, sizeof(struct addrinfo));
-           hints.ai_family = AF_UNSPEC;     
-           hints.ai_socktype = SOCK_STREAM; 
-           hints.ai_flags = AI_PASSIVE | AI_ALL;
-           hints.ai_protocol = 0;          
-   
-  s = getaddrinfo("localhost","5555", &hints, &result);
-  
-  if(s != 0){
-    perror("Get add Error");
-    return -1;
-  }
-    
-  for(rp = result ; rp != NULL ; rp = rp->ai_next){
-        sfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-    if(sfd==-1){
-        continue;
-        }
-    if(connect(sfd, rp->ai_addr, rp->ai_addrlen)==0){
-         break;
-         close(sfd);
-        }
-    }        
-    
-    if(rp == NULL){
-        printf("Error client could not bind\n");
-        
+  memset(&hints, 0, sizeof(struct addrinfo));
+  hints.ai_family = AF_UNSPEC;     /* Allow IPv4 or IPv6 */
+  hints.ai_socktype = SOCK_STREAM; /* Stream socket */
+
+  ret_code = getaddrinfo(srv_name, srv_port, &hints, &result);
+  if ( ret_code != 0 ) 
+    {
+      fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(ret_code));
+      return -1;
     }
 
-    return sfd;
+  for (rp = result; rp != NULL; rp = rp->ai_next) {
+    clt_sock = socket(rp->ai_family, rp->ai_socktype,
+		 rp->ai_protocol);
+    if (clt_sock == -1) 
+      continue; // 
+    
+    if (connect(clt_sock, rp->ai_addr, rp->ai_addrlen) != -1)
+      break;         /* Connection succeeded */
 
+    /* else try next entry */
+    close(clt_sock);
+  }
+  
+  if (rp == NULL){  /* No address succeeded */
+    PERROR("socket");
+    freeaddrinfo(result); /* no longer needed */
+    return -1;
+  }
+
+  freeaddrinfo(result); /* no longer needed */
+
+  return clt_sock;
 }
 
-
 int authenticate(int clt_sock){
-
-  /* Code nécessaire à l'authentification auprès du serveur :
-
-     - attendre un paquet AUTH_REQ
-
-     - répondre avec un paquet AUTH_RESP
-     
-     - attendre un paquet ACCESS_OK / ACCESS_DENIED / AUTH_REQ
-
-     - agir en conséquence ...
-
-  */
-
-  return -1;
+  
+//   while (1){
+//     //unsigned char code;
+//     unsigned char size;
+//     char login[BUFFSIZE];
+//     
+//     // - attendre un paquet AUTH_REQ
+// 
+//     // - répondre avec un paquet AUTH_RESP
+//      
+//     // - attendre un paquet ACCESS_OK / ACCESS_DENIED / AUTH_REQ
+// 
+//     // - agir en conséquence ...
+// 
+//     
+//     DEBUG("Login sent: %s(%d)", login, size);
+//     
+//   } /* while */
 }
 
 int instant_messaging(int clt_sock){
   
   while(1){
-    /*    fd_set rset;
+      
+//       char test[256];
+//       fgets(test, 256, stdin);
+//       DEBUG("%s", test);
+//       
+//       if(!(send_msg(clt_sock,12, test, 256,0))){
+//             perror("zaazea");
+//     }
+      
+    fd_set rset;
     unsigned char code;
     unsigned char size;
     char *data;
@@ -84,45 +99,35 @@ int instant_messaging(int clt_sock){
     FD_ZERO(&rset);
     FD_SET(clt_sock, &rset);
     FD_SET(STDIN_FILENO, &rset);
-    */
+    
     
     /* pour les étapes 2 à 4 se contenter de recevoir les messages
        envoyés par le serveur et les afficher à l'utilisateur
     */
 
-    // if (select(clt_sock+1, &rset, NULL, NULL, NULL) < 0){
-    //   PERROR("select");
-    //   exit(EXIT_FAILURE);
-    // }
+    if (select(clt_sock+1, &rset, NULL, NULL, NULL) < 0){
+        PERROR("select");
+        exit(EXIT_FAILURE);
+    }
     
-    // if (FD_ISSET(STDIN_FILENO, &rset)){
-    /* l'utilisateur a tapé un nouveau message */
-    //   DEBUG("STDIN_FILENO isset");
-    //   data = malloc(BUFFSIZE);
-    //   if (fgets(data, BUFFSIZE, stdin) == NULL){
-    	/* gérer feof et ferror */
+    if (FD_ISSET(STDIN_FILENO, &rset)){
+        /* l'utilisateur a tapé un nouveau message */
+        DEBUG("STDIN_FILENO isset");
+        data = malloc(BUFFSIZE);
+        if (fgets(data, BUFFSIZE, stdin) == NULL){
+            perror("Erreur stdin");
+            return 0;
+       }
+        size = strlen(data)+1;
+        DEBUG("sending MESG %s(%d)", data, size);
+        
+        free(data);
+     }
 
-   //   <COMPLÉTER>
-    
-    // 	return 0;
-    //   }
-    //   size = strlen(data)+1;
-      
-    //   DEBUG("sending MESG %s(%d)", data, size);
-
-    //  <COMPLÉTER>
-
-    //   free(data);
-      
-    // }
-
-    //  if (FD_ISSET(clt_sock, &rset)){
-      /* réception d'un message du serveur */
-      /* expected: <code><datalen>[<data>] */
-
-      //  <COMPLÉTER>
-      
-    //}
+      if (FD_ISSET(clt_sock, &rset)){
+        
+    }
+ 
     
   } /* while (1) */
 
@@ -130,26 +135,28 @@ int instant_messaging(int clt_sock){
 }
 
 int main(int argc, char *argv[]){
-    int srv_port = 5555;
-    int serveur ;
-    printf("Client main");
-    
-   serveur =  connect_to_server(srv_port);
-    DFLAG = 1;
-    char body[256] = "HELLO\0";
+  // char srv_name[BUFFSIZE];
+  char *srv_port = SRV_PORT;
 
-        
-        if(send_msg(serveur,21,256,"Coucou") <=0){
-            perror("pb msg");
-            return -1;
-        }else{printf("Msg ok");
-        }
+  DFLAG = 1;
 
-  // connect to the server
+  clt_sock = connect_to_server(srv_name, srv_port);
+  if (clt_sock < 0)
+    exit(EXIT_FAILURE);
 
-  // authenticate
+//   if (authenticate(clt_sock) < 0){
+//     close(clt_sock);
+//     eprintf("connexion closed\n");
+//     exit(EXIT_FAILURE);
+//   }
 
-  // start instant messaging app
-  
+  if (instant_messaging(clt_sock) < 0){
+    close(clt_sock);
+    eprintf("connexion closed\n");
+    exit(EXIT_FAILURE);
+    }
+
+  close(clt_sock);
+  eprintf("connexion closed\n");
   exit(EXIT_SUCCESS);
 }

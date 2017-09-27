@@ -51,7 +51,6 @@ int create_a_listening_socket(char *srv_port){
   return sfd;
 }
 
-
 int accept_clt_conn(int srv_sock, struct sockaddr_in clt_sockaddr){
   int clt_sock =-1;
 
@@ -61,6 +60,12 @@ int accept_clt_conn(int srv_sock, struct sockaddr_in clt_sockaddr){
     return clt_sock;
 }
 
+
+void onAlarme(){
+    
+    DEBUG("\nALARME arret du programme : \n");
+    kill(getpid(),SIGKILL );
+}
 
 int main(void){
   int sfd;
@@ -73,8 +78,12 @@ int main(void){
     
 
   while (1){
+    signal(SIGINT, onAlarme);
+      
     int clt_sock = -1;
      char body[256];
+     
+ 
      
     if(! (clt_sock = accept_clt_conn(sfd,clt_sockaddr))){
             perror("Erreur acpt");
@@ -82,6 +91,7 @@ int main(void){
     if(!(recv(clt_sock, body, 256,0))){
         perror("Err msg cli");
     }
+ 
     DEBUG("resul : %s", body);
  
     
